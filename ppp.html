@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>zvigvi DC — Голосовая связь</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #313338; color: #dbdee1; display: flex; height: 100vh; overflow: hidden; justify-content: center; align-items: center; }
+        #screen-login { background-color: #2b2d31; width: 420px; padding: 40px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); text-align: center; display: flex; flex-direction: column; gap: 20px; }
+        #screen-create { display: none; background-color: #2b2d31; width: 440px; padding: 40px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); text-align: center; flex-direction: column; gap: 20px; }
+        #screen-join { display: none; background-color: #2b2d31; width: 440px; padding: 40px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); text-align: center; flex-direction: column; gap: 20px; }
+        #screen-app { display: none; width: 100%; height: 100vh; }
+        h1, .title { color: #fff; font-size: 26px; font-weight: bold; margin-bottom: 5px; }
+        p, .desc { color: #949ba4; font-size: 15px; }
+        .form-group { text-align: left; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        label { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #b5bac1; }
+        input { background-color: #1e1f22; border: none; padding: 14px; border-radius: 4px; color: #fff; outline: none; font-size: 15px; width: 100%; }
+        .btn { color: #fff; border: none; padding: 14px 20px; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 15px; width: 100%; text-align: center; }
+        .btn-green { background-color: #23a55a; }
+        .btn-green:hover { background-color: #1a7f43; }
+        .btn-blue { background-color: #5865f2; }
+        .btn-blue:hover { background-color: #4752c4; }
+        .btn-red { background-color: #da373c; }
+        .btn-red:hover { background-color: #a92b2f; }
+        .btn-back { background: none; color: #b5bac1; text-decoration: underline; margin-top: 5px; border: none; cursor: pointer; }
+        .btn-back:hover { color: #fff; }
+        .code-box { background-color: #1e1f22; padding: 15px; border-radius: 6px; color: #23a55a; font-family: monospace; font-size: 18px; font-weight: bold; border: 1px dashed #23a55a; }
+        .sidebar { width: 260px; background-color: #2b2d31; display: flex; flex-direction: column; padding: 15px 10px; border-right: 1px solid #1f2023; justify-content: space-between; height: 100%; }
+        .sidebar-top h2 { font-size: 18px; color: #fff; margin-bottom: 20px; padding-left: 5px; font-weight: 700; }
+        .channel-btn { background: none; border: none; color: #23a55a; text-align: left; padding: 10px; border-radius: 4px; font-size: 15px; width: 100%; font-weight: 600; background-color: rgba(35, 165, 90, 0.1); }
+        .user-profile { background-color: #23a55a; padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .profile-title { font-size: 11px; text-transform: uppercase; font-weight: bold; opacity: 0.8; }
+        .profile-name { font-size: 15px; font-weight: bold; }
+        .profile-id-box { background: rgba(0,0,0,0.2); padding: 6px; border-radius: 4px; font-family: monospace; font-size: 13px; font-weight: bold; }
+        .main-content { flex: 1; display: flex; flex-direction: column; background-color: #313338; height: 100%; }
+        .top-bar { height: 60px; background-color: #313338; border-bottom: 1px solid #1f2023; display: flex; align-items: center; padding: 0 20px; }
+        .brand-logo { font-size: 18px; font-weight: bold; color: #fff; }
+        .connect-box { margin-left: auto; }
+        .voice-container { flex: 1; display: flex; justify-content: center; align-items: center; gap: 50px; padding: 20px; }
+        .voice-avatar-box { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+        .avatar { width: 120px; height: 120px; background-color: #5865f2; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 38px; color: #fff; font-weight: bold; box-shadow: 0 6px 20px rgba(0,0,0,0.3); border: 4px solid transparent; }
+        .active-voice .avatar { border-color: #23a55a; box-shadow: 0 0 25px rgba(35, 165, 90, 0.7); }
+        .user-label { font-size: 16px; font-weight: 600; color: #f2f3f5; }
+        audio { display: none; }
+    </style>
+    <!-- Подключаем обратно библиотеку связи -->
+    <script src="https://unpkg.com"></script>
+</head>
+<body>
+
+    <div id="screen-login">
+        <h1>zvigvi DC</h1>
+        <p>Придумайте никнейм для входа в связь</p>
+        <div class="form-group">
+            <label>Ваш никнейм</label>
+            <input type="text" id="nick-field" value="zvigvi pro">
+        </div>
+        <button class="btn btn-green" onclick="clickCreate()">✨ Создать свою комнату</button>
+        <button class="btn btn-blue" onclick="clickJoin()">🔊 Подключиться к другу</button>
+    </div>
+
+    <div id="screen-create">
+        <div class="title">Создание комнаты</div>
+        <div class="desc">Ваш секретный код готов. Скопируйте и отправьте его другу.</div>
+        <div class="form-group">
+            <label>Код вашей комнаты</label>
+            <div class="code-box" id="generated-code">Генерация...</div>
+        </div>
+        <button class="btn btn-green" onclick="enterChannel(true)">🚀 Открыть голосовой канал</button>
+        <button class="btn btn-back" onclick="clickBack()">← Назад к смене ника</button>
+    </div>
+
+    <div id="screen-join">
+        <div class="title">Подключение к другу</div>
+        <div class="desc">Введите код, который сгенерировал ваш друг.</div>
+        <div class="form-group">
+            <label>Код комнаты друга</label>
+            <input type="text" id="code-field" placeholder="Вставьте код вида zvigvi-XXXX">
+        </div>
+        <button class="btn btn-blue" onclick="enterChannel(false)">🔗 Подключиться к связи</button>
+        <button class="btn btn-back" onclick="clickBack()">← Назад к смене ника</button>
+    </div>
+
+    <div id="screen-app">
+        <div style="display: flex; width: 100%; height: 100%;">
+            <div class="sidebar">
+                <div class="sidebar-top">
+                    <h2>zvigvi DC</h2>
+                    <button class="channel-btn">🔊 Общая комната</button>
+                </div>
+                <div class="user-profile">
+                    <div class="profile-title">Код вашей комнаты:</div>
+                    <div class="profile-id-box" id="profile-code">...</div>
+                    <div class="profile-title" style="margin-top: 5px;">Ваш ник:</div>
+                    <div class="profile-name" id="profile-name-text">...</div>
+                </div>
+            </div>
+            <div class="main-content">
+                <div class="top-bar">
+                    <div class="brand-logo">🟢 Статус: В голосовом канале</div>
+                    <div class="connect-box">
+                        <button class="btn btn-red" style="padding: 10px 20px; font-size: 14px; width: auto;" onclick="clickBack()">Отключиться</button>
+                    </div>
+                </div>
+                <div class="voice-container">
+                    <div class="voice-avatar-box active-voice">
+                        <div class="avatar" id="user-avatar-letters">ZV</div>
+                        <div class="user-label" id="user-label-name">Вы</div>
+                    </div>
+                    <div class="voice-avatar-box" id="remote-member" style="display: none;">
+                        <div class="avatar" style="background-color: #e67e22;">ДР</div>
+                        <div class="user-label" id="remote-label">Собеседник</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="remote-audio" autoplay></audio>
+
+    <script>
+        var loginScreen = document.getElementById('screen-login');
+        var createScreen = document.getElementById('screen-create');
+        var joinScreen = document.getElementById('screen-join');
+        var appScreen = document.getElementById('screen-app');
+        var nickField = document.getElementById('nick-field');
+        var profileCode = document.getElementById('profile-code');
+        var profileNameText = document.getElementById('profile-name-text');
+        var userLabelName = document.getElementById('user-label-name');
+        var userAvatarLetters = document.getElementById('user-avatar-letters');
+        var generatedCodeDiv = document.getElementById('generated-code');
+        var remoteMember = document.getElementById('remote-member');
+        var remoteLabel = document.getElementById('remote-label');
+        var remoteAudio = document.getElementById('remote-audio');
+
+        var localStream;
+        var peer;
+        var currentCall;
+        
+        // Генерируем случайный ID вида zvigvi-1234
+        var customRoomId = 'zvigvi-' + Math.floor(1000 + Math.random() * 9000);
+        generatedCodeDiv.textContent = customRoomId;
+
+        function clickCreate() {
+            loginScreen.style.display = 'none';
+            createScreen.style.display = 'flex';
+        }
+
+        function clickJoin() {
+            loginScreen.style.display = 'none';
+            joinScreen.style.display = 'flex';
+        }
+
+        function clickBack() {
+            if (currentCall) currentCall.close();
+            if (peer) peer.destroy();
+            document.body.style.justifyContent = 'center';
+            document.body.style.alignItems = 'center';
+            loginScreen.style.display = 'flex';
+            createScreen.style.display = 'none';
+            joinScreen.style.display = 'none';
+            appScreen.style.display = 'none';
+        }
+
